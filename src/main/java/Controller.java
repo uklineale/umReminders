@@ -30,6 +30,7 @@ public class Controller {
         staticFiles.externalLocation(UPLOAD_DIR);
 
         get("/", (req, res) ->
+                //TODO: Make stylish page
             "<form method='post' enctype='multipart/form-data'>" // note the enctype
                     + "    <input type='file' name='" + UPLOADED_FILE + "' accept='.csv'>"
                     + "    <button>Upload CSV</button>"
@@ -37,21 +38,19 @@ public class Controller {
         );
 
         post("/", (req, res) -> {
+            LOG.info("Got request");
+
+            //TODO: look into security
             Path tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
             req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/temp"));
-
+            Files.delete();
+            req.attribute()
             List<String[]> lines = parser.parse(req);
 
             return prettyPrintCsv(lines);
             //TODO send messages with v2
             //TODO remove files from uploaded folder
         });
-    }
-
-
-    public static void logInfo(Request req) throws IOException, ServletException {
-        String fileName = req.raw().getPart(UPLOADED_FILE).getSubmittedFileName();
-        LOG.info("Uploaded file '" + fileName +"'");
     }
 
     public static String readFile(InputStream stream) throws IOException {
