@@ -1,32 +1,27 @@
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
-
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
 import java.util.List;
+
 
 public class Messenger {
 
-    private static final String FROM = "+12523709553";
-    private static final String USER_ID = "u-whatever";
-    private static final String URL = "https://api.catapult.inetwork.com/v2/users/" + USER_ID +
-            "/messages";
-    private static final String JSON_BODY = "{\"from\":\"%s\",\"to\":\"%s\",\"text\":\"%s\"}";
+    private static Logger LOG = LoggerFactory.getLogger(Messenger.class);
+    private String fromNumber;
+    private String apiToken;
+    private String apiSecret;
+    private String applicationId;
+    private String url = "https://api.catapult.inetwork.com/v2/users/%s/messages";
 
-    private static HttpURLConnection connection;
-    private static OutputStream outputStream;
-
-    public Messenger() throws Exception {
-        URL url = new URL(URL);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-        connection.setRequestMethod("POST");
-        connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-
-        this.connection = connection;
+    public Messenger(String fromNumber, String userId, String apiToken, String apiSecret, String applicationId) {
+        this.fromNumber = fromNumber;
+        this.apiToken = apiToken;
+        this.apiSecret = apiSecret;
+        this.applicationId = applicationId;
+        this.url = String.format(url, userId);
     }
 
     public void sendMessages(List<String[]> messages) throws Exception {
@@ -36,7 +31,19 @@ public class Messenger {
                     || StringUtils.isBlank(message[1])) {
                 continue;
             }
-            String content = URLEncoder.encode(String.format(JSON_BODY, FROM, message[0], message[1]));
+
+            LOG.info("Sending message to " + message[0]);
+
+            HttpResponse<JsonNode> response = Unirest.post(url)
+                    .header("accept", "application/json")
+                    .basicAuth(apiToken, apiSecret)
+                    .field("from", fromNumber)
+                    .field("to", message[0])
+                    .field("text", message[1])
+                    .field("applicationId", applicationId)
+                    .asJson();
+
+            System.out.print(response.getBody().toString());
         }
     }
 }

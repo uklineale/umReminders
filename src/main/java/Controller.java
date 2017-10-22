@@ -1,34 +1,24 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
 
 import javax.servlet.MultipartConfigElement;
-import javax.servlet.ServletException;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static spark.Spark.*;
+import static spark.Spark.get;
+import static spark.Spark.post;
 
 
 public class Controller {
 
     private static final String UPLOADED_FILE = Constants.UPLOADED_FILE;
-    private static final String UPLOAD_DIR = Constants.UPLOAD_DIR;
 
     private static final Parser parser = new Parser();
+    private static final Messenger messenger = new Messenger(Constants.FROM, Constants.USER_ID, Constants.API_TOKEN,
+            Constants.API_SECRET, Constants.APPLICATION_ID);
 
     private static Logger LOG = LoggerFactory.getLogger(Controller.class);
 
     public static void main(String[] args) {
-
-        File uploadDir = new File(UPLOAD_DIR);
-        uploadDir.mkdir();
-
-        staticFiles.externalLocation(UPLOAD_DIR);
-
         get("/", (req, res) ->
                 //TODO: Make stylish page
             "<form method='post' enctype='multipart/form-data'>" // note the enctype
@@ -41,24 +31,14 @@ public class Controller {
             LOG.info("Got request");
 
             //TODO: look into security
-            Path tempFile = Files.createTempFile(uploadDir.toPath(), "", "");
             req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/temp"));
-            Files.delete();
-            req.attribute()
             List<String[]> lines = parser.parse(req);
+            messenger.sendMessages(lines);
 
             return prettyPrintCsv(lines);
             //TODO send messages with v2
-            //TODO remove files from uploaded folder
         });
     }
-
-    public static String readFile(InputStream stream) throws IOException {
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(stream))){
-            return reader.lines().collect(Collectors.joining("\n"));
-        }
-    }
-
 
     private static String prettyPrintCsv(List<String[]> lines) {
         StringBuilder sb = new StringBuilder();
@@ -69,6 +49,7 @@ public class Controller {
                 sb.append(" ");
             }
             sb.append("\n");
+
         }
 
         return sb.toString();
