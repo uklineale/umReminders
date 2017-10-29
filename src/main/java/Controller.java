@@ -12,13 +12,17 @@ public class Controller {
 
     private static final String UPLOADED_FILE = Constants.UPLOADED_FILE;
 
-    private static final Parser parser = new Parser();
-    private static final Messenger messenger = new Messenger(Constants.FROM, Constants.USER_ID, Constants.API_TOKEN,
-            Constants.API_SECRET, Constants.APPLICATION_ID);
+    private static Parser parser;
+    private static Messenger messenger;
 
     private static Logger LOG = LoggerFactory.getLogger(Controller.class);
 
-    public static void main(String[] args) {
+    public Controller(Parser parser, Messenger messenger) {
+        this.parser = parser;
+        this.messenger = messenger;
+    }
+
+    public void handleRequests() {
         get("/", (req, res) ->
                 //TODO: Make stylish page
             "<form method='post' enctype='multipart/form-data'>" // note the enctype
