@@ -34,7 +34,6 @@ public class Controller {
         post("/", (req, res) -> {
             LOG.info("Got request");
 
-            //TODO: look into security
             req.attribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement("/temp"));
             List<String[]> lines = parser.parse(req);
             messenger.sendMessages(lines);
